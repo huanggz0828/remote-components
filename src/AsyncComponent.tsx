@@ -4,6 +4,7 @@ import { Alert } from 'antd';
 
 const packages = {
   react: React,
+  antd: require('antd'),
 };
 
 const getParsedModule = (code: string) => {
@@ -28,10 +29,12 @@ const AsyncComponent: React.FC<
   const { name, mockCode, children } = props;
   const [Component, setComponent] = useState<React.ComponentType<any>>();
   const [error, setError] = useState<Error>();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!name || !mockCode) return;
-    setError(undefined)
+    setError(undefined);
+    setLoading(true);
     mockFetch(mockCode).then(res => {
       try {
         const CompExport = getParsedModule(res);
@@ -39,6 +42,7 @@ const AsyncComponent: React.FC<
           throw new Error('远程组件没有export default');
         }
         setComponent(() => CompExport.default);
+        setLoading(false);
       } catch (err: any) {
         setError(err);
       }
@@ -53,7 +57,7 @@ const AsyncComponent: React.FC<
 
   if (error) return renderError({ error });
 
-  if (!Component) return <div>loading</div>;
+  if (!Component || loading) return <div>loading</div>;
 
   return (
     <ErrorBoundary fallbackRender={renderError}>
