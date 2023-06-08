@@ -9,7 +9,7 @@ const packages = {
 
 const getParsedModule = (code: string) => {
   const _exports = { default: undefined as any };
-  Function('require, exports', `try {${code}} catch (e) {}`)(
+  Function('require, exports', code)(
     (name: keyof typeof packages) => packages[name],
     _exports
   );

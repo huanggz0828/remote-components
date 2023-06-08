@@ -19,7 +19,7 @@ registerPromiseWorker(event => {
   try {
     const transformed = Babel.transform(code, {
       babelrc: false,
-      filename: 'repl.jsx',
+      filename: 'index.jsx',
       sourceMap: false,
       assumptions: {},
       presets: [
