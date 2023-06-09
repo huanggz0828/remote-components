@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Alert } from 'antd';
+import { Alert, Spin } from 'antd';
 import { nanoid } from 'nanoid';
 import Less from 'less';
 
@@ -22,46 +22,52 @@ const getParsedModule = (code: string) => {
 };
 
 // 模拟接口
-const mockFetch = (mockCode: MockCode) =>
+const mockFetch = (mockCode: MockCode, delay: number) =>
   new Promise<MockCode>(resolve => {
     setTimeout(() => {
       resolve(mockCode);
-    }, 1e3);
+    }, delay);
   });
 
-const AsyncComponent: React.FC<
-  React.PropsWithChildren & { name: string; mockCode: MockCode }
-> = props => {
-  const { name, mockCode, children } = props;
+interface AsyncComponentProps extends React.PropsWithChildren {
+  name: string;
+  mockCode: MockCode; //
+  mockDelay?: number; // 模拟接口延迟
+}
+
+const AsyncComponent: React.FC<AsyncComponentProps> = props => {
+  const { name, mockCode, mockDelay, children } = props;
   const [Component, setComponent] = useState<React.ComponentType<any>>();
   const [scopedCss, setScopedCss] = useState<string>();
   const [error, setError] = useState<Error>();
   const [loading, setLoading] = useState(false);
   const uid = useRef(nanoid()); // 组件唯一id
 
+  const init = (res: MockCode) => {
+    try {
+      const CompExport = getParsedModule(res.js!);
+      if (!CompExport.default) {
+        throw new Error('远程组件没有export default');
+      }
+      setComponent(() => CompExport.default);
+      // 根据唯一id加载css，实现样式隔离
+      res.css &&
+        Less.render(`div[data-css='${uid.current}']{${res.css}}`).then(output => {
+          setScopedCss(output.css);
+        });
+      setLoading(false);
+    } catch (err: any) {
+      // 错误边界只能捕获react组件render过程中的错误
+      // 这里是捕获react组件运行前的错误
+      setError(err);
+    }
+  };
+
   useEffect(() => {
     if (!name || !mockCode.js) return;
     setError(undefined);
     setLoading(true);
-    mockFetch(mockCode).then(res => {
-      try {
-        const CompExport = getParsedModule(res.js!);
-        if (!CompExport.default) {
-          throw new Error('远程组件没有export default');
-        }
-        setComponent(() => CompExport.default);
-        // 根据唯一id加载css，实现样式隔离
-        res.css &&
-          Less.render(`div[data-css=${uid.current}]{${res.css}}`).then(output => {
-            setScopedCss(output.css);
-          });
-        setLoading(false);
-      } catch (err: any) {
-        // 错误边界只能捕获react组件render过程中的错误
-        // 这里是捕获react组件运行前的错误
-        setError(err);
-      }
-    });
+    mockDelay ? mockFetch(mockCode, mockDelay).then(init) : init(mockCode);
   }, [mockCode]);
 
   const renderError = ({ error }: { error: any }) => {
@@ -72,7 +78,7 @@ const AsyncComponent: React.FC<
 
   if (error) return renderError({ error });
 
-  if (!Component || loading) return <div>loading</div>;
+  if (!Component || loading) return <Spin size='large' />;
 
   return (
     <div data-css={uid.current}>
