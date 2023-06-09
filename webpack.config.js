@@ -9,13 +9,14 @@ const config = {
   stats: {
     children: true,
   },
+  cache: {
+    type: 'filesystem', // 使用文件缓存
+  },
   entry: './src/main.tsx',
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.json'],
   },
   output: {
-    // Don't bother with hashing/versioning the filename - Netlify does it
-    // for us in prod.
     filename: '[name].js',
   },
   module: {
@@ -27,7 +28,7 @@ const config = {
       },
       {
         test: /\.less$/,
-        use: ["style-loader", "css-loader", "less-loader"],
+        use: ['style-loader', 'css-loader', 'less-loader'],
       },
     ],
   },
@@ -42,12 +43,11 @@ const config = {
   ],
   devServer: {
     port: 5173,
+    hot: true,
     client: {
       overlay: false,
     },
   },
-
-  // workaround https://bugs.webkit.org/show_bug.cgi?id=212725
   optimization: {
     minimizer: [
       new TerserPlugin({
