@@ -9,7 +9,7 @@ type MockCode = { js?: string; css?: string };
 // 定义导入远程组件的第三方包
 const packages = {
   react: React,
-  antd: require('antd'),
+  // antd: require('antd'),
 };
 
 const getParsedModule = (code: string) => {
