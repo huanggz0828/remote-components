@@ -10,6 +10,8 @@ type MockCode = { js?: string; css?: string };
 const packages = {
   react: React,
   antd: require('antd'),
+  'react-dom': require('react-dom'),
+  dayjs: require('dayjs'),
 };
 
 const getParsedModule = (code: string) => {
@@ -78,7 +80,7 @@ const AsyncComponent: React.FC<AsyncComponentProps> = props => {
 
   if (error) return renderError({ error });
 
-  if (!Component || loading) return <Spin size='large' />;
+  if (!Component || loading) return <Spin size="large" />;
 
   return (
     <div data-css={uid.current}>

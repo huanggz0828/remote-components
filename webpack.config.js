@@ -20,6 +20,12 @@ const config = {
   output: {
     filename: '[name].js',
   },
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    dayjs: 'dayjs',
+    antd: 'antd',
+  },
   module: {
     rules: [
       {
@@ -47,13 +53,6 @@ const config = {
       Buffer: ['buffer'],
     }),
   ],
-  devServer: {
-    port: 5173,
-    hot: true,
-    client: {
-      overlay: false,
-    },
-  },
   optimization: {
     usedExports: true,
     minimizer: [
@@ -65,6 +64,13 @@ const config = {
         },
       }),
     ],
+  },
+  devServer: {
+    port: 5173,
+    hot: true,
+    client: {
+      overlay: false,
+    },
   },
 };
 
