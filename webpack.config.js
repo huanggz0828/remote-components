@@ -18,7 +18,6 @@ const config = {
   entry: './src/main.tsx',
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.json'],
-    modules: [path.resolve(__dirname, 'node_modules')],
   },
   output: {
     filename: '[name].js',
