@@ -6,7 +6,7 @@ import Less from 'less';
 
 type MockCode = { js?: string; css?: string };
 
-// 定义导入远程组件的第三方包
+/** 定义导入远程组件的第三方包 */
 const packages = {
   react: React,
   antd: require('antd'),
@@ -14,6 +14,7 @@ const packages = {
   dayjs: require('dayjs'),
 };
 
+/** 将远程代码做成模块 */
 const getParsedModule = (code: string) => {
   const _exports = { default: undefined as any };
   const _require = (name: keyof typeof packages) => packages[name];
@@ -23,7 +24,7 @@ const getParsedModule = (code: string) => {
   return _exports;
 };
 
-// 模拟接口
+/** 模拟接口 */
 const mockFetch = (mockCode: MockCode, delay: number) =>
   new Promise<MockCode>(resolve => {
     setTimeout(() => {
@@ -33,7 +34,7 @@ const mockFetch = (mockCode: MockCode, delay: number) =>
 
 interface AsyncComponentProps extends React.PropsWithChildren {
   name: string;
-  mockCode: MockCode; //
+  mockCode: MockCode; // 模拟代码
   mockDelay?: number; // 模拟接口延迟
 }
 

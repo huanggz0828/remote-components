@@ -3,10 +3,6 @@ import { registerPromiseWorker } from './WorkerUtils';
 declare var Babel: any;
 declare function importScripts(url: string): void;
 
-// 使用WebWorker有两个原因
-// 1. Babel编译代码开销大，避免阻塞页面（非主要原因）
-// 2. Babel编译过程中会使用如`path`的Node.js模块函数，
-//    浏览器环境内会报错，在WebWorker内可正常运行
 registerPromiseWorker(event => {
   const { code, lang, method } = event;
   // 从CDN加载Babel

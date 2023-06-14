@@ -15,14 +15,19 @@ import { DEFAULT_JS, DEFAULT_LESS } from './constans';
 const WorkerSource = require('worker-loader?inline=no-fallback&esModule=false!./Worker');
 
 function App() {
-  const [code, setCode] = useState(DEFAULT_JS);
-  const [lessCode, setLessCode] = useState(DEFAULT_LESS);
-  const [activeLang, setActiveLang] = useState('javascript');
-  const [compiledCode, setCompiledCode] = useState('');
-  const [compiledCss, setCompiledCss] = useState('');
-  const [jsErrorMessage, setJsErrorMessage] = useState('');
-  const [cssErrorMessage, setCssErrorMessage] = useState('');
-  // 注册WebWorker
+  const [code, setCode] = useState(DEFAULT_JS); // 编译前js代码
+  const [lessCode, setLessCode] = useState(DEFAULT_LESS); // 编译前css代码
+  const [activeLang, setActiveLang] = useState('javascript'); // 当前语言模式
+  const [compiledCode, setCompiledCode] = useState(''); // 编译后js代码
+  const [compiledCss, setCompiledCss] = useState(''); // 编译后css代码
+  const [jsErrorMessage, setJsErrorMessage] = useState(''); // js编译报错信息
+  const [cssErrorMessage, setCssErrorMessage] = useState(''); // css编译报错信息
+  /**
+   * 使用WebWorker有两个原因
+   * 1. Babel编译代码开销大，避免阻塞页面（非主要原因）
+   * 2. Babel编译过程中会使用如`path`的Node.js模块函数，
+   *    浏览器环境内会报错，在WebWorker内可正常运行
+   */
   const worker = useRef(registerPromiseWorkerApi(new WorkerSource()));
 
   useMount(() => {
@@ -35,6 +40,7 @@ function App() {
     });
   });
 
+  /**编译js */
   const handleCompileJs = (lang: string | undefined = activeLang) => {
     setJsErrorMessage('');
     if (!code) return;
@@ -48,6 +54,7 @@ function App() {
     });
   };
 
+  /**编译css */
   const handleCompileCss = () => {
     setCssErrorMessage('');
     if (!lessCode) return;
@@ -68,6 +75,7 @@ function App() {
       });
   };
 
+  // 结束输入500ms后开始编译，避免编写过程中编译报错
   useDebounceEffect(
     () => {
       handleCompileJs();
