@@ -26,7 +26,8 @@ function App() {
    * 使用WebWorker有两个原因
    * 1. Babel编译代码开销大，避免阻塞页面（非主要原因）
    * 2. Babel编译过程中会使用如`path`的Node.js模块函数，
-   *    浏览器环境内会报错，在WebWorker内可正常运行
+   *    浏览器环境内会报错，在worker-loader的inline模式下可正常运行
+   *    inline=no-fallback等效inline=true&fallback=false
    */
   const worker = useRef(registerPromiseWorkerApi(new WorkerSource()));
 

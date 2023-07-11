@@ -1,6 +1,9 @@
 export const DEFAULT_JS = `import React, { useState } from 'react';
 
 export default function MyApp() {
+  window.aaa = 111
+  console.log(window.aaa)
+  console.log(window.history)
   return (
     <div>
       <h1>Counters that update separately</h1>

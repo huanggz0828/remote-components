@@ -8,7 +8,7 @@ registerPromiseWorker(event => {
   // 从CDN加载Babel
   if (method === 'loadScript') {
     try {
-      // WebWorker内部方法importScripts
+      // WebWorker内部加载Script方法importScripts
       importScripts('https://unpkg.com/@babel/standalone@7.22.4/babel.min.js');
       return true;
     } catch (error) {

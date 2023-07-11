@@ -18,9 +18,30 @@ const packages = {
 const getParsedModule = (code: string) => {
   const _exports = { default: undefined as any };
   const _require = (name: keyof typeof packages) => packages[name];
+  // 简易沙箱
+  const fakeWindow = {};
+  const proxyWindow = new Proxy(window, {
+    // 获取属性
+    get(target, key) {
+      return Reflect.get(target, key) || Reflect.get(fakeWindow, key);
+    },
+    // 设置属性
+    set(target, key, value) {
+      return Reflect.set(fakeWindow, key, value);
+    },
+    // 判断属性是否有
+    has(target, key) {
+      return key in target || key in fakeWindow;
+    },
+  });
   // 由于远程组件不在模块内
   // 所以需要模拟组件内的require和exports
-  Function('require, exports', code)(_require, _exports);
+  Function('require, exports, window', 'globalThis', code)(
+    _require,
+    _exports,
+    proxyWindow,
+    proxyWindow
+  );
   return _exports;
 };
 
