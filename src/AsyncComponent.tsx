@@ -4,25 +4,22 @@ import { Alert, Spin } from 'antd';
 import { nanoid } from 'nanoid';
 import Less from 'less';
 
-type MockCode = { js?: string; css?: string };
-
-/** 定义导入远程组件的第三方包 */
-const packages = {
-  react: React,
-  antd: require('antd'),
-  'react-dom': require('react-dom'),
-  dayjs: require('dayjs'),
-};
+type MockResponse = { name: string; js?: string; css?: string };
 
 /** 将远程代码做成模块 */
-const getParsedModule = (code: string) => {
-  const _exports = { default: undefined as any };
-  const _require = (name: keyof typeof packages) => packages[name];
+const getParsedModule = (name: string, code: string) => {
   // 简易沙箱
   const fakeWindow = {};
-  const proxyWindow = new Proxy(window, {
+  const proxyWindow: Window = new Proxy(window, {
     // 获取属性
     get(target, key) {
+      if (key === Symbol.unscopables) return false;
+
+      // 内部可能访问当这几个变量，都直接返回代理对象
+      if (['window', 'self', 'globalThis'].includes(key)) {
+        return proxyWindow;
+      }
+
       return Reflect.get(target, key) || Reflect.get(fakeWindow, key);
     },
     // 设置属性
@@ -34,42 +31,36 @@ const getParsedModule = (code: string) => {
       return key in target || key in fakeWindow;
     },
   });
-  // 由于远程组件不在模块内
-  // 所以需要模拟组件内的require和exports
-  Function('require, exports, window', 'globalThis', code)(
-    _require,
-    _exports,
-    proxyWindow,
-    proxyWindow
-  );
-  return _exports;
+  // 取出组件的exports
+  Function('window', `with(window){${code}}`)(proxyWindow);
+  return Reflect.get(fakeWindow, name);
 };
 
 /** 模拟接口 */
-const mockFetch = (mockCode: MockCode, delay: number) =>
-  new Promise<MockCode>(resolve => {
+const mockFetch = (mockResponse: MockResponse, delay: number) =>
+  new Promise<MockResponse>(resolve => {
     setTimeout(() => {
-      resolve(mockCode);
+      resolve(mockResponse);
     }, delay);
   });
 
 interface AsyncComponentProps extends React.PropsWithChildren {
   name: string;
-  mockCode: MockCode; // 模拟代码
+  mockResponse: MockResponse; // 模拟代码
   mockDelay?: number; // 模拟接口延迟
 }
 
 const AsyncComponent: React.FC<AsyncComponentProps> = props => {
-  const { name, mockCode, mockDelay, children } = props;
+  const { name, mockResponse, mockDelay, children } = props;
   const [Component, setComponent] = useState<React.ComponentType<any>>();
   const [scopedCss, setScopedCss] = useState<string>();
   const [error, setError] = useState<Error>();
   const [loading, setLoading] = useState(false);
   const uid = useRef(nanoid()); // 组件唯一id
 
-  const init = (res: MockCode) => {
+  const init = (res: MockResponse) => {
     try {
-      const CompExport = getParsedModule(res.js!);
+      const CompExport = getParsedModule(res.name, res.js!);
       if (!CompExport.default) {
         throw new Error('远程组件没有export default');
       }
@@ -88,17 +79,17 @@ const AsyncComponent: React.FC<AsyncComponentProps> = props => {
   };
 
   useEffect(() => {
-    if (!name || !mockCode.js) return;
+    if (!name || !mockResponse.js) return;
     setError(undefined);
     setLoading(true);
-    mockDelay ? mockFetch(mockCode, mockDelay).then(init) : init(mockCode);
-  }, [mockCode]);
+    mockDelay ? mockFetch(mockResponse, mockDelay).then(init) : init(mockResponse);
+  }, [mockResponse]);
 
   const renderError = ({ error }: { error: any }) => {
     return <Alert type="error" showIcon message={`远程组件${name}异常：${error?.message}`}></Alert>;
   };
 
-  if (!mockCode.js) return;
+  if (!mockResponse.js) return;
 
   if (error) return renderError({ error });
 

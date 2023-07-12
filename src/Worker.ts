@@ -1,10 +1,11 @@
 import { registerPromiseWorker } from './WorkerUtils';
+import { DEFAULT_GlOBALS } from './constant';
 
 declare var Babel: any;
 declare function importScripts(url: string): void;
 
 registerPromiseWorker(event => {
-  const { code, lang, method } = event;
+  const { globals, name, code, lang, method } = event;
   // 从CDN加载Babel
   if (method === 'loadScript') {
     try {
@@ -27,7 +28,7 @@ registerPromiseWorker(event => {
         targets: {
           browsers: ['defaults', 'not ie 11', 'not ie_mob 11'],
         },
-        modules: 'commonjs',
+        modules: 'umd',
       },
     ],
     'react',
@@ -35,13 +36,25 @@ registerPromiseWorker(event => {
   isTs && presets.push('typescript');
   const babelConfig = {
     babelrc: false,
-    filename: `index.${isTs ? 'tsx' : 'jsx'}`,
+    moduleId: name,
+    filename: `${name}.${isTs ? 'tsx' : 'jsx'}`,
     sourceMap: false,
     presets,
+    plugins: [
+      [
+        'transform-modules-umd',
+        {
+          globals: {
+            ...DEFAULT_GlOBALS,
+            ...globals
+          },
+        },
+      ],
+    ],
     sourceType: 'module',
   };
   try {
-    // 编译代码
+    // 编译代码]
     const transformed = Babel.transform(code, babelConfig);
     compiled = transformed.code;
   } catch (err: any) {

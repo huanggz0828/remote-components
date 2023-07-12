@@ -10,9 +10,11 @@ import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { Alert, Button, Layout, Modal, Segmented, Space } from 'antd';
 import AsyncComponent from './AsyncComponent';
 import { registerPromiseWorkerApi } from './WorkerUtils';
-import { DEFAULT_JS, DEFAULT_LESS } from './constans';
+import { DEFAULT_JS, DEFAULT_LESS } from './constant';
 
 const WorkerSource = require('worker-loader?inline=no-fallback&esModule=false!./Worker');
+
+const compName = 'MyApp';
 
 function App() {
   const [code, setCode] = useState(DEFAULT_JS); // 编译前js代码
@@ -22,6 +24,7 @@ function App() {
   const [compiledCss, setCompiledCss] = useState(''); // 编译后css代码
   const [jsErrorMessage, setJsErrorMessage] = useState(''); // js编译报错信息
   const [cssErrorMessage, setCssErrorMessage] = useState(''); // css编译报错信息
+
   /**
    * 使用WebWorker有两个原因
    * 1. Babel编译代码开销大，避免阻塞页面（非主要原因）
@@ -46,7 +49,7 @@ function App() {
     setJsErrorMessage('');
     if (!code) return;
     // 通知WebWorker编译代码
-    worker.current.postMessage({ code, lang }).then(({ compiled, errorMsg }) => {
+    worker.current.postMessage({ name: compName, code, lang }).then(({ compiled, errorMsg }) => {
       if (errorMsg) {
         setJsErrorMessage(errorMsg);
       } else {
@@ -114,7 +117,7 @@ function App() {
               content: (
                 <AsyncComponent
                   name="MyButton"
-                  mockCode={{ js: compiledCode, css: compiledCss }}
+                  mockResponse={{ name: compName, js: compiledCode, css: compiledCss }}
                   mockDelay={1e3}
                 />
               ),
@@ -172,7 +175,10 @@ function App() {
             extensions={[less()]}
           />
         </div>
-        <AsyncComponent name="MyButton" mockCode={{ js: compiledCode, css: compiledCss }} />
+        <AsyncComponent
+          name="MyButton"
+          mockResponse={{ name: compName, js: compiledCode, css: compiledCss }}
+        />
       </Layout.Content>
     </>
   );

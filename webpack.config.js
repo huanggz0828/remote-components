@@ -3,6 +3,7 @@ const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const {DEFAULT_GlOBALS} = require('./src/constant')
 
 const isPro = process.env.NODE_ENV === 'production';
 
@@ -22,12 +23,7 @@ const config = {
   output: {
     filename: '[name].js',
   },
-  externals: {
-    react: 'React',
-    'react-dom': 'ReactDOM',
-    dayjs: 'dayjs',
-    antd: 'antd',
-  },
+  externals: DEFAULT_GlOBALS,
   module: {
     rules: [
       {

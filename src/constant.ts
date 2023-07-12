@@ -1,3 +1,10 @@
+export const DEFAULT_GlOBALS = {
+  react: 'React',
+  'react-dom': 'ReactDOM',
+  dayjs: 'dayjs',
+  antd: 'antd',
+};
+
 export const DEFAULT_JS = `import React, { useState } from 'react';
 
 export default function MyApp() {
@@ -26,7 +33,7 @@ function MyButton() {
     </button>
   );
 }
-`
+`;
 
 export const DEFAULT_LESS = `h1 {
     font-size: 3.2em;
@@ -47,4 +54,4 @@ export const DEFAULT_LESS = `h1 {
     &:hover {
       border-color: #646cff;
     }
-  }`
+  }`;
