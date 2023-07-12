@@ -16,7 +16,7 @@ const getParsedModule = (name: string, code: string) => {
       if (key === Symbol.unscopables) return false;
 
       // 内部可能访问当这几个变量，都直接返回代理对象
-      if (['window', 'self', 'globalThis'].includes(key)) {
+      if (['window', 'self', 'globalThis'].includes(key as string)) {
         return proxyWindow;
       }
 

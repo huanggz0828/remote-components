@@ -11,7 +11,7 @@ type WorkerEvent = {
 };
 
 export function registerPromiseWorker(handler: Handler) {
-  self.addEventListener("message", function (event) {
+  self.addEventListener('message', function (event) {
     const { data } = event;
 
     try {
@@ -21,7 +21,7 @@ export function registerPromiseWorker(handler: Handler) {
         message,
         uid: data.uid,
       });
-    } catch (error) {
+    } catch (error: any) {
       self.postMessage({
         error: error.message,
         uid: data.uid,
@@ -31,12 +31,12 @@ export function registerPromiseWorker(handler: Handler) {
 }
 
 export function registerPromiseWorkerApi(worker: any) {
-  const uidMap = {};
+  const uidMap: Record<string, any> = {};
 
   // Unique id per message since message order isn't guaranteed
   let counter = 0;
 
-  worker.addEventListener("message", (event: WorkerEvent) => {
+  worker.addEventListener('message', (event: WorkerEvent) => {
     const { uid, error, message } = event.data;
     const [resolve, reject] = uidMap[uid];
 
