@@ -15,7 +15,7 @@ import { DEFAULT_JS, DEFAULT_LESS } from './constant';
 const WorkerSource = require('worker-loader?inline=no-fallback&esModule=false!./Worker');
 
 const compName = 'MyApp';
-
+// https://unpkg.com/lodash@4.17.21/lodash.js
 function App() {
   const [code, setCode] = useState(DEFAULT_JS); // 编译前js代码
   const [lessCode, setLessCode] = useState(DEFAULT_LESS); // 编译前css代码
@@ -116,7 +116,6 @@ function App() {
               width: 500,
               content: (
                 <AsyncComponent
-                  name="MyButton"
                   mockResponse={{ name: compName, js: compiledCode, css: compiledCss }}
                   mockDelay={1e3}
                 />
@@ -175,10 +174,7 @@ function App() {
             extensions={[less()]}
           />
         </div>
-        <AsyncComponent
-          name="MyButton"
-          mockResponse={{ name: compName, js: compiledCode, css: compiledCss }}
-        />
+        <AsyncComponent mockResponse={{ name: compName, js: compiledCode, css: compiledCss }} />
       </Layout.Content>
     </>
   );

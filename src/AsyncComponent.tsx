@@ -45,13 +45,12 @@ const mockFetch = (mockResponse: MockResponse, delay: number) =>
   });
 
 interface AsyncComponentProps extends React.PropsWithChildren {
-  name: string;
   mockResponse: MockResponse; // 模拟代码
   mockDelay?: number; // 模拟接口延迟
 }
 
 const AsyncComponent: React.FC<AsyncComponentProps> = props => {
-  const { name, mockResponse, mockDelay, children } = props;
+  const { mockResponse, mockDelay, children } = props;
   const [Component, setComponent] = useState<React.ComponentType<any>>();
   const [scopedCss, setScopedCss] = useState<string>();
   const [error, setError] = useState<Error>();
@@ -79,7 +78,7 @@ const AsyncComponent: React.FC<AsyncComponentProps> = props => {
   };
 
   useEffect(() => {
-    if (!name || !mockResponse.js) return;
+    if (!mockResponse.name || !mockResponse.js) return;
     setError(undefined);
     setLoading(true);
     mockDelay ? mockFetch(mockResponse, mockDelay).then(init) : init(mockResponse);
