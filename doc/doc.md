@@ -6,7 +6,7 @@
 
 流程：
 
-1. 将组件打包
+1. 将组件打包为UMD模块（UMD 模块规范是一种兼容浏览器全局变量、AMD 规范、CommonJS 规范的规范）
 2. 将打包后的js上传到服务器
 3. 使用远程组件时，通过接口获取js代码
 4. 将组件利用 `Vue` 中的动态组件或者 `React` 中 `React.createElement` 进行渲染。
@@ -56,13 +56,9 @@ Function(arg: string, code: string)
 ```
 
 ```tsx
-const getParsedModule = (code: string) => {
-  const _exports = { default: undefined as any };
-  const _require = (name: keyof typeof packages) => packages[name];
-  // 由于远程组件不在模块内
-  // 所以需要模拟组件内的require和exports
-  Function('require, exports', code)(_require, _exports);
-  return _exports;
+const getParsedModule = (code: string, name: string) => {
+  Function('', code)();
+  return window[name];
 };
 
 //...
@@ -80,7 +76,7 @@ return <Component {...props}>{children}</Component>
 
 ## 远程组件上传方案
 
-在网络上所有文章的上传方案都是rollup打包并上传，但是问题来了，还要用rollup打包？业务方还算能接受，用户怕是难以接受。而且打包后再上传，无法保存原有的React代码信息，可读性很差。有没有一种更简便，更优雅的方式
+在网络上所有文章的上传方案都是rollup打包并上传，但是问题来了，用rollup打包，业务方还算能接受，用户怕是难以接受。而且打包后再上传，无法保存原有的React代码信息，可读性很差。有没有一种更简便，更优雅的方式
 
 ### Babel的函数式使用
 

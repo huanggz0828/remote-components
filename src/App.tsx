@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Less from 'less';
 import { useMount, useDebounceEffect } from 'ahooks';
 
@@ -7,23 +7,29 @@ import { javascript } from '@codemirror/lang-javascript';
 import { less } from '@codemirror/lang-less';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 
-import { Alert, Button, Layout, Modal, Segmented, Space } from 'antd';
+import { Alert, Button, Layout, Modal, Segmented, Space, Spin } from 'antd';
 import AsyncComponent from './AsyncComponent';
-import { registerPromiseWorkerApi } from './WorkerUtils';
-import { DEFAULT_JS, DEFAULT_LESS } from './constant';
+import { registerPromiseWorkerApi } from './utils/WorkerUtils';
+import { DEFAULT_JS, DEFAULT_LESS, loadScript } from './utils/constant';
+import ExternalForm from './ExternalForm';
 
-const WorkerSource = require('worker-loader?inline=no-fallback&esModule=false!./Worker');
+const WorkerSource = require('worker-loader?inline=no-fallback&esModule=false!./utils/Worker');
+
+export type ExternalList = { libraryName: string; libraryGlobal: string; libraryUrl: string }[];
 
 const compName = 'MyApp';
 // https://unpkg.com/lodash@4.17.21/lodash.js
 function App() {
   const [code, setCode] = useState(DEFAULT_JS); // 编译前js代码
+  const [codeLoading, setCodeLoading] = useState(false); // 编译js代码loading
   const [lessCode, setLessCode] = useState(DEFAULT_LESS); // 编译前css代码
+  const [lessCodeLoading, setLessCodeLoading] = useState(false); // 编译css代码loading
   const [activeLang, setActiveLang] = useState('javascript'); // 当前语言模式
   const [compiledCode, setCompiledCode] = useState(''); // 编译后js代码
   const [compiledCss, setCompiledCss] = useState(''); // 编译后css代码
   const [jsErrorMessage, setJsErrorMessage] = useState(''); // js编译报错信息
   const [cssErrorMessage, setCssErrorMessage] = useState(''); // css编译报错信息
+  const [externalList, setExternalList] = useState<ExternalList>([]);
 
   /**
    * 使用WebWorker有两个原因
@@ -48,14 +54,26 @@ function App() {
   const handleCompileJs = (lang: string | undefined = activeLang) => {
     setJsErrorMessage('');
     if (!code) return;
+    setCodeLoading(true);
     // 通知WebWorker编译代码
-    worker.current.postMessage({ name: compName, code, lang }).then(({ compiled, errorMsg }) => {
-      if (errorMsg) {
-        setJsErrorMessage(errorMsg);
-      } else {
-        setCompiledCode(compiled);
-      }
-    });
+    worker.current
+      .postMessage({
+        globals: externalList.reduce(
+          (pre, cur) => ({ ...pre, [cur.libraryName]: cur.libraryGlobal }),
+          {}
+        ),
+        name: compName,
+        code,
+        lang,
+      })
+      .then(({ compiled, errorMsg }) => {
+        setCodeLoading(false);
+        if (errorMsg) {
+          setJsErrorMessage(errorMsg);
+        } else {
+          setCompiledCode(compiled);
+        }
+      });
   };
 
   /**编译css */
@@ -63,6 +81,7 @@ function App() {
     setCssErrorMessage('');
     if (!lessCode) return;
     // Less程序化编译
+    setLessCodeLoading(true);
     Less.render(lessCode)
       .then(output => {
         setCompiledCss(output.css);
@@ -76,6 +95,9 @@ function App() {
         );
         extractWithLine.splice(1, 0, `${'  '.repeat(column + 1)}^`);
         setCssErrorMessage(`${message} (${realLine}:${column})\n\n${extractWithLine.join('\n')}`);
+      })
+      .finally(() => {
+        setLessCodeLoading(false);
       });
   };
 
@@ -87,6 +109,10 @@ function App() {
     [code],
     { wait: 500 }
   );
+
+  useEffect(() => {
+    handleCompileJs();
+  }, [externalList]);
 
   useDebounceEffect(
     () => {
@@ -109,6 +135,12 @@ function App() {
             }}
           />
         </div>
+        <ExternalForm
+          onOk={data => {
+            setExternalList(data);
+            data.forEach(item => loadScript(item.libraryUrl));
+          }}
+        />
         <Button
           onClick={() =>
             Modal.info({
@@ -156,23 +188,27 @@ function App() {
 
         <div className="code-container">
           编译后js
-          <CodeMirror
-            readOnly
-            theme={vscodeDark}
-            value={compiledCode}
-            width="600px"
-            height="100%"
-            extensions={[javascript()]}
-          />
+          <Spin spinning={codeLoading}>
+            <CodeMirror
+              readOnly
+              theme={vscodeDark}
+              value={compiledCode}
+              width="600px"
+              height="100%"
+              extensions={[javascript()]}
+            />
+          </Spin>
           编译后css
-          <CodeMirror
-            readOnly
-            theme={vscodeDark}
-            value={compiledCss}
-            width="600px"
-            height="100%"
-            extensions={[less()]}
-          />
+          <Spin spinning={lessCodeLoading}>
+            <CodeMirror
+              readOnly
+              theme={vscodeDark}
+              value={compiledCss}
+              width="600px"
+              height="100%"
+              extensions={[less()]}
+            />
+          </Spin>
         </div>
         <AsyncComponent mockResponse={{ name: compName, js: compiledCode, css: compiledCss }} />
       </Layout.Content>

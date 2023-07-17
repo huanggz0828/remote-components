@@ -55,3 +55,17 @@ export const DEFAULT_LESS = `h1 {
       border-color: #646cff;
     }
   }`;
+
+export function loadScript(src: string) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.type = 'text/javascript';
+    script.async = true;
+    document.head.appendChild(script);
+    script.onload = () => {
+      setTimeout(resolve, 0);
+    };
+    script.onerror = () => reject();
+  });
+}

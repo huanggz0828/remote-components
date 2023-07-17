@@ -6,6 +6,7 @@ declare function importScripts(url: string): void;
 
 registerPromiseWorker(event => {
   const { globals, name, code, lang, method } = event;
+  console.log(globals)
   // 从CDN加载Babel
   if (method === 'loadScript') {
     try {
